@@ -2,9 +2,7 @@ use std::{net::SocketAddr, ops::DerefMut, time::Duration};
 
 use tokio::{io::{AsyncReadExt, AsyncWriteExt}, net::tcp::{OwnedReadHalf, OwnedWriteHalf}, sync::Mutex};
 
-use crate::frame::{TcpFrame, TNetworkFrame};
-
-use canzero_common::CanFrame;
+use canzero_common::{CanFrame, NetworkFrame, TNetworkFrame};
 
 #[derive(Debug)]
 pub struct TcpCan {
@@ -16,7 +14,7 @@ impl TcpCan {
     pub async fn connect(socketaddr : SocketAddr) -> std::io::Result<Self>  {
         let tcp_stream = tokio::net::TcpStream::connect(socketaddr).await?;
 
-        let frame_size = bincode::serialized_size(&TNetworkFrame::new(Duration::from_secs(0), TcpFrame{
+        let frame_size = bincode::serialized_size(&TNetworkFrame::new(Duration::from_secs(0), NetworkFrame{
             bus_id : 0,
             can_frame : CanFrame::new(0, false, false, 0, 0),
         })).unwrap();

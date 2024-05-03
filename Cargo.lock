@@ -62,7 +62,7 @@ checksum = "514de17de45fdb8dc022b1a7975556c53c86f9f0aa5f534b98977b171857c2c9"
 [[package]]
 name = "canzero-common"
 version = "0.1.0"
-source = "git+https://github.com/mu-zero-HYPERLOOP/canzero-common.git#af5aaf3871fbdc0a43ce4fca92f6d7679e4ffd29"
+source = "git+https://github.com/mu-zero-HYPERLOOP/canzero-common.git#103560d28ce27ab1b51fc98ea48faa03ca318106"
 dependencies = [
  "serde",
 ]
