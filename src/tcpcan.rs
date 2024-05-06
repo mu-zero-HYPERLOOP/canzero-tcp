@@ -15,9 +15,9 @@ use canzero_common::{CanFrame, NetworkFrame, TNetworkFrame};
 use crate::wdg::Watchdog;
 
 #[derive(Serialize, Deserialize, Clone)]
-enum TcpFrame {
+pub enum TcpFrame {
     NetworkFrame(TNetworkFrame),
-    KeepAlive,
+    KeepAlive { _padding: [u8; 29] },
 }
 
 #[derive(Debug)]
@@ -34,14 +34,19 @@ impl TcpCan {
     }
 
     pub fn new(tcp_stream: TcpStream) -> Self {
-        let frame_size = bincode::serialized_size(&TcpFrame::NetworkFrame(TNetworkFrame::new(
-            Duration::from_secs(0),
-            NetworkFrame {
-                bus_id: 0,
-                can_frame: CanFrame::new(0, false, false, 0, 0),
-            },
-        )))
-        .unwrap();
+        let network_frame_size =
+            bincode::serialized_size(&TcpFrame::NetworkFrame(TNetworkFrame::new(
+                Duration::from_secs(0),
+                NetworkFrame {
+                    bus_id: 0,
+                    can_frame: CanFrame::new(0, false, false, 0, 0),
+                },
+            )))
+            .unwrap();
+
+        let keep_alive_frame_size =
+            bincode::serialized_size(&TcpFrame::KeepAlive { _padding: [0; 29] }).unwrap();
+        assert_eq!(keep_alive_frame_size, network_frame_size);
 
         let (rx, tx) = tcp_stream.into_split();
 
@@ -49,7 +54,8 @@ impl TcpCan {
 
         let keep_alive_sock = tx.clone();
         tokio::spawn(async move {
-            let keep_alive_frame = bincode::serialize(&TcpFrame::KeepAlive).unwrap();
+            let keep_alive_frame =
+                bincode::serialize(&TcpFrame::KeepAlive { _padding: [0; 29] }).unwrap();
             loop {
                 tokio::time::interval(Duration::from_millis(500))
                     .tick()
@@ -71,7 +77,7 @@ impl TcpCan {
 
         Self {
             tx_stream: tx,
-            rx_stream: Mutex::new((vec![0; frame_size as usize], rx)),
+            rx_stream: Mutex::new((vec![0; network_frame_size as usize], rx)),
             wdg,
         }
     }
@@ -90,7 +96,7 @@ impl TcpCan {
                     match rx_res {
                         Ok(_) => match bincode::deserialize::<TcpFrame>(rx_buffer).unwrap() {
                             TcpFrame::NetworkFrame(network_frame) => return Some(network_frame),
-                            TcpFrame::KeepAlive => {
+                            TcpFrame::KeepAlive { _padding } => {
                                 self.wdg.reset().await;
                             }
                         },
