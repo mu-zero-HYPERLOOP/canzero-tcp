@@ -1,5 +1,6 @@
 use std::{net::SocketAddr, ops::DerefMut, sync::Arc, time::Duration};
 
+use color_print::cprintln;
 use serde::{Deserialize, Serialize};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -100,10 +101,14 @@ impl TcpCan {
                                 self.wdg.reset().await;
                             }
                         },
-                        Err(_) => return None,
+                        Err(_) => {
+                            cprintln!("<red>TCP connection closed</red>");
+                            return None;
+                        }
                     }
                 },
                 _wdg_timeout = self.wdg.timeout() =>  {
+                    cprintln!("<red>TCP connection watchdog timed out</red>");
                     return None;
                 },
             }

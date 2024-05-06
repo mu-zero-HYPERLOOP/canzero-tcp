@@ -10,3 +10,4 @@ canzero-common = { git = "https://github.com/mu-zero-HYPERLOOP/canzero-common.gi
 tokio = { version = "1.36.0", features = ["full"] }
 bincode = { version = "1.3.3", features = ["i128"] }
 serde = { version = "1.0.197", features = ["derive", "serde_derive"] }
+color-print = "0.3.6"
