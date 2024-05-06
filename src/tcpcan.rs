@@ -114,7 +114,7 @@ impl TcpCan {
             }
         }
     }
-    pub async fn addr(&self) -> SocketAddr {
-        self.tx_stream.lock().await.peer_addr().unwrap()
+    pub async fn addr(&self) -> std::io::Result<SocketAddr> {
+        self.tx_stream.lock().await.peer_addr()
     }
 }
